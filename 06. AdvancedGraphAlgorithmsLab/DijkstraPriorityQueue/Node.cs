@@ -4,19 +4,19 @@
 
     public class Node : IComparable<Node>
     {
-        public Node(int name, int distance)
+        public Node(int id, double distance = double.PositiveInfinity)
         {
-            this.Name = name;
-            this.Distance = distance;
+            this.Id = id;
+            this.DistanceFromStart = distance;
         }
 
-        public int Name { get; set; }
+        public int Id { get; set; }
 
-        public int Distance { get; set; }
+        public double DistanceFromStart { get; set; }
 
         public int CompareTo(Node other)
         {
-            return this.Distance.CompareTo(other.Distance);
+            return this.DistanceFromStart.CompareTo(other.DistanceFromStart);
         }
     }
 }

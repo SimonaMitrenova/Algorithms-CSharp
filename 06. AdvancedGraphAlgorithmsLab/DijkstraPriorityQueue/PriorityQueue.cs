@@ -5,38 +5,42 @@
 
     public class PriorityQueue<T> where T : IComparable<T>
     {
-        private List<T> heap;
-        private Dictionary<T, int> indices; 
+        private readonly Dictionary<T, int> searchCollection;
+        private readonly List<T> heap;
 
         public PriorityQueue()
         {
             this.heap = new List<T>();
-            this.indices = new Dictionary<T, int>();
+            this.searchCollection = new Dictionary<T, int>();
         }
 
-        public PriorityQueue(IEnumerable<T> elements)
+        public int Count
         {
-            this.heap = new List<T>(elements);
-            this.indices = new Dictionary<T, int>();
-            
-            for (int index = this.Count - 1; index >= 0; index--)
+            get
             {
-                this.indices[this.heap[index]] = index;
-                this.HeapifyDown(index);
+                return this.heap.Count;
             }
         }
 
-        public int Count => this.heap.Count;
+        public bool Contains(T node)
+        {
+            return this.searchCollection.ContainsKey(node);
+        }
 
         public T ExtractMin()
         {
             var min = this.heap[0];
-            this.heap[0] = this.heap[this.Count - 1];
-            this.heap.RemoveAt(this.Count - 1);
-            if (this.Count > 0)
+            var last = this.heap[this.heap.Count - 1];
+            this.searchCollection[last] = 0;
+            this.heap[0] = last;
+            this.heap.RemoveAt(this.heap.Count - 1);
+            if (this.heap.Count > 0)
             {
                 this.HeapifyDown(0);
             }
+
+            this.searchCollection.Remove(min);
+
             return min;
         }
 
@@ -45,67 +49,60 @@
             return this.heap[0];
         }
 
-        public void Insert(T node)
+        public void Enqueue(T element)
         {
-            this.heap.Add(node);
-            this.HeapifyUp(this.Count - 1);
+            this.searchCollection.Add(element, this.heap.Count);
+            this.heap.Add(element);
+            this.HeapifyUp(this.heap.Count - 1);
         }
 
-        public void InsertAt(int index, T node)
+        private void HeapifyDown(int i)
         {
-            this.heap.RemoveAt(index);
-            this.heap.Insert(index, node);
-        }
-
-        public int FindIndex(T node)
-        {
-            if (!this.indices.ContainsKey(node))
-            {
-                return -1;
-            }
-
-            return this.indices[node];
-        }
-
-        private void HeapifyDown(int index)
-        {
-            var left = (2 * index) + 1;
-            var right = (2 * index) + 2;
-            var smallest = index;
+            var left = (2 * i) + 1;
+            var right = (2 * i) + 2;
+            var smallest = i;
 
             if (left < this.heap.Count && this.heap[left].CompareTo(this.heap[smallest]) < 0)
             {
                 smallest = left;
             }
+
             if (right < this.heap.Count && this.heap[right].CompareTo(this.heap[smallest]) < 0)
             {
                 smallest = right;
             }
-            if (smallest != index)
+
+            if (smallest != i)
             {
-                T old = this.heap[index];
-                this.heap[index] = this.heap[smallest];
+                T old = this.heap[i];
+                this.searchCollection[old] = smallest;
+                this.searchCollection[this.heap[smallest]] = i;
+                this.heap[i] = this.heap[smallest];
                 this.heap[smallest] = old;
-                this.indices[this.heap[smallest]] = smallest;
-                this.indices[this.heap[index]] = index;
                 this.HeapifyDown(smallest);
             }
         }
 
-        private void HeapifyUp(int index)
+        private void HeapifyUp(int i)
         {
-            var parent = (index - 1) / 2;
-            while (index > 0 && this.heap[index].CompareTo(this.heap[parent]) < 0)
+            var parent = (i - 1) / 2;
+            while (i > 0 && this.heap[i].CompareTo(this.heap[parent]) < 0)
             {
-                T old = this.heap[index];
-                this.heap[index] = this.heap[parent];
+                T old = this.heap[i];
+                this.searchCollection[old] = parent;
+                this.searchCollection[this.heap[parent]] = i;
+                this.heap[i] = this.heap[parent];
                 this.heap[parent] = old;
-                this.indices[this.heap[parent]] = parent;
-                this.indices[this.heap[index]] = index;
 
-                index = parent;
-                parent = (index - 1) / 2;
+                i = parent;
+                parent = (i - 1) / 2;
             }
+        }
+
+        public void DecreaseKey(T element)
+        {
+            int index = this.searchCollection[element];
+            this.HeapifyUp(index);
         }
     }
 }

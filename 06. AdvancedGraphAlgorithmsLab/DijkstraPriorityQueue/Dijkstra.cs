@@ -1,63 +1,57 @@
 ﻿namespace DijkstraPriorityQueue
 {
+    using System;
     using System.Collections.Generic;
 
     public class Dijkstra
     {
-        public static List<int> DijkstraAlgorithm(int[,] graph, int sourceNode, int destinationNode)
+        public static List<int> DijkstraAlgorithm(Dictionary<Node, Dictionary<Node, int>> graph, Node sourceNode, Node destinationNode)
         {
-            int n = graph.GetLength(0);
-            int[] distance = new int[n];
-            for (int i = 0; i < n; i++)
-            {
-                distance[i] = int.MaxValue;
-            }
-            distance[sourceNode] = 0;
-            var visited = new bool[n];
-            int?[] previous = new int?[n];
+            int?[] previous = new int?[graph.Count];
+            bool[] visited = new bool[graph.Count];
             var priorityQueue = new PriorityQueue<Node>();
-           
-            priorityQueue.Insert(new Node(sourceNode, 0));
+            sourceNode.DistanceFromStart = 0;
+            priorityQueue.Enqueue(sourceNode);
+
             while (priorityQueue.Count > 0)
             {
-                var minNode = priorityQueue.ExtractMin();
-                if (minNode.Distance == int.MaxValue)
+                var currentNode = priorityQueue.ExtractMin();
+                if (currentNode.Id == destinationNode.Id)
                 {
                     break;
                 }
-                visited[minNode.Name] = true;
 
-                for (int node = 0; node < n; node++)
+                foreach (var edge in graph[currentNode])
                 {
-                    if (graph[minNode.Name, node] > 0)
+                    if (!visited[edge.Key.Id])
                     {
-                        if (!visited[node])
-                        {
-                            int distanseToNode = minNode.Distance + graph[minNode.Name, node];
-                            if (distanseToNode < distance[node])
-                            {
-                                priorityQueue.Insert(new Node(node, distanseToNode));
-                                distance[node] = distanseToNode;
-                                previous[node] = minNode.Name;
-                            }
-                        }
+                        priorityQueue.Enqueue(edge.Key);
+                        visited[edge.Key.Id] = true;
+                    }
+
+                    double distance = currentNode.DistanceFromStart + edge.Value;
+                    if (distance < edge.Key.DistanceFromStart)
+                    {
+                        edge.Key.DistanceFromStart = distance;
+                        previous[edge.Key.Id] = currentNode.Id;
+                        priorityQueue.DecreaseKey(edge.Key);
                     }
                 }
             }
 
-            if (distance[destinationNode] == int.MaxValue)
+            if (double.IsInfinity(destinationNode.DistanceFromStart))
             {
                 return null;
             }
 
-            var path = new List<int>();
-            int? currentNode = destinationNode;
-            while (currentNode != null)
+            List<int> path = new List<int>();
+            int? current = destinationNode.Id;
+            while (current != null)
             {
-                path.Add(currentNode.Value);
-                currentNode = previous[currentNode.Value];
+                path.Add(current.Value);
+                current = previous[current.Value];
             }
-
+            
             path.Reverse();
             return path;
         }
